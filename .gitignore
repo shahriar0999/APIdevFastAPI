@@ -1,0 +1,4 @@
+.venv
+test_main.http
+.idea/httpRequests/
+.idea/misc.xml
