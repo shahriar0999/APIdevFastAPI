@@ -36,6 +36,15 @@ def createPost(post: Post):
     my_post.append(new_post)
     return {'Message': new_post}
 
+def find_post(id):
+    for post in my_post:
+        if post['id'] == id:
+            return post
+
+@app.get("/posts/{id}")
+def get_post(id: int):
+    post = find_post(id)
+    return {'message': post}
 
 
 @app.post("/createpost")
