@@ -1,5 +1,5 @@
 import uvicorn
-from fastapi import FastAPI, status, HTTPException
+from fastapi import FastAPI, status, HTTPException, Response
 from pydantic import BaseModel
 from fastapi.params import Body
 from models import Feature, Post
@@ -17,6 +17,11 @@ def find_post(id):
     for post in my_post:
         if post['id'] == id:
             return post
+
+def find_post_index(id):
+    for i, post in enumerate(my_post):
+        if post['id'] == id:
+            return i
 
 my_post = [{'title': "hello world", 'content': 'many people are starting their coding journey by write Hello World program', 'id': 1},
            {'title': 'AI Change industry', 'content': 'due to AI involvment some jobs go down', 'id': 2}]
@@ -49,6 +54,23 @@ def get_post(id: int):
         raise HTTPException(status_code=404, detail=f"Post with id {id} not found")
     return {'message': post}
 
+@app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_post(id: int):
+    index = find_post_index(id)
+    if index == None:
+        raise HTTPException(status_code=404, detail=f"Post with id {id} not found")
+    my_post.pop(index)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@app.put("/posts/{id}")
+def update_post(id: int, post: Post):
+    index = find_post_index(id)
+    if index == None:
+        raise HTTPException(status_code=404, detail=f"Post with id {id} not found")
+    post_dict = post.dict()
+    post_dict['id'] = id
+    return {'data': post_dict}
 
 
 if __name__ == "__main__":
