@@ -1,5 +1,5 @@
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, status, HTTPException
 from pydantic import BaseModel
 from fastapi.params import Body
 from models import Feature, Post
@@ -12,6 +12,11 @@ class Post(BaseModel):
     content: str
     published: bool = True
     ratings: float = None
+
+def find_post(id):
+    for post in my_post:
+        if post['id'] == id:
+            return post
 
 my_post = [{'title': "hello world", 'content': 'many people are starting their coding journey by write Hello World program', 'id': 1},
            {'title': 'AI Change industry', 'content': 'due to AI involvment some jobs go down', 'id': 2}]
@@ -29,28 +34,20 @@ def get_post():
     return {'message': my_post,}
 
 
-@app.post("/posts")
+@app.post("/posts", status_code=status.HTTP_201_CREATED)
 def createPost(post: Post):
     new_post = post.dict()
     new_post['id'] = len(my_post) + 1
     my_post.append(new_post)
     return {'Message': new_post}
 
-def find_post(id):
-    for post in my_post:
-        if post['id'] == id:
-            return post
 
 @app.get("/posts/{id}")
 def get_post(id: int):
     post = find_post(id)
+    if not post:
+        raise HTTPException(status_code=404, detail=f"Post with id {id} not found")
     return {'message': post}
-
-
-@app.post("/createpost")
-def create_post(payload : dict = Body(...)):
-    print(payload)
-    return {"new_post": f" title {payload['text']} content {payload['content']}"}
 
 
 
