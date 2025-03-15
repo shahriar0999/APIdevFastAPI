@@ -1,13 +1,20 @@
 import time
 import uvicorn
-from fastapi import FastAPI, status, HTTPException, Response
+from fastapi import FastAPI, status, HTTPException, Response, Depends
 from pydantic import BaseModel
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from sqlalchemy.orm import Session
+import models
+from database import engine, get_db
+
+models.Base.metadata.create_all(bind=engine)
 
 
 
 app = FastAPI()
+
+
 
 class Post(BaseModel):
     title: str
@@ -48,6 +55,10 @@ my_post = [{'title': "hello world", 'content': 'many people are starting their c
 @app.get("/")
 def read_root():
     return {"message": "FastAPI is running on a custom port"}
+
+@app.get("/sqlalchemy")
+def test_sqlalchemy(db: Session = Depends(get_db)):
+    return {"status": "OK"}
 
 
 @app.get("/posts")
