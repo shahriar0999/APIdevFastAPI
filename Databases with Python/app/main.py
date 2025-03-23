@@ -91,36 +91,47 @@ def createPost(post: Post, db: Session = Depends(get_db)):
 
 
 @app.get("/posts/{id}")
-def get_post(id: int):
-    cursor.execute("""SELECT * FROM posts WHERE id = %s""", (id,))
-    post = cursor.fetchone()
-    print(post)
+def get_post(id: int, db: Session = Depends(get_db)):
+    # cursor.execute("""SELECT * FROM posts WHERE id = %s""", (id,))
+    # post = cursor.fetchone()
+    post = db.query(models.Post).filter(models.Post.id == id).first()
+
     if not post:
         raise HTTPException(status_code=404, detail=f"Post with id {id} not found")
     return {'message': post}
 
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(id: int):
-    cursor.execute("""DELETE FROM posts WHERE id = %s returning *""", (id,))
-    conn.commit()
-    deleted_post = cursor.fetchone()
-    if deleted_post == None:
+def delete_post(id: int, db: Session = Depends(get_db)):
+    # cursor.execute("""DELETE FROM posts WHERE id = %s returning *""", (id,))
+    # conn.commit()
+    # deleted_post = cursor.fetchone()
+    deleted_post = db.query(models.Post).filter(models.Post.id == id)
+    if deleted_post.first() == None:
         raise HTTPException(status_code=404, detail=f"Post with id {id} not found")
+
+    deleted_post.delete(synchronize_session=False)
+    db.commit()
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @app.put("/posts/{id}")
-def update_post(id: int, post: Post):
-    cursor.execute("""UPDATE posts SET title = %s, content = %s, published = %s WHERE id = %s RETURNING *""",
-                   (post.title, post.content, post.published, id))
-    updated_post = cursor.fetchone()
-    conn.commit()
-    if updated_post == None:
+def update_post(id: int, updated_post: Post, db: Session = Depends(get_db)):
+    # cursor.execute("""UPDATE posts SET title = %s, content = %s, published = %s WHERE id = %s RETURNING *""",
+    #                (post.title, post.content, post.published, id))
+    # updated_post = cursor.fetchone()
+    # conn.commit()
+    post_query = db.query(models.Post).filter(models.Post.id == id)
+    post = post_query.first()
+
+    if post == None:
         raise HTTPException(status_code=404, detail=f"Post with id {id} not found")
 
-    return {'data': updated_post}
+    post_query.update(updated_post.dict(), synchronize_session=False)
+    db.commit()
+
+    return {'data': post_query.first()}
 
 
 if __name__ == "__main__":
-    uvicorn.run('main:app', host="127.0.0.1", port=9000, reload=True)
+    uvicorn.run('main:app', host="127.0.0.1", port=9002, reload=True)
