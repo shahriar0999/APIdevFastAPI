@@ -129,5 +129,19 @@ def update_post(id: int, updated_post: schemas.PostCreate, db: Session = Depends
     return post_query.first()
 
 
+@app.post("/users", status_code=status.HTTP_201_CREATED, response_model=schemas.UserOut)
+def createPost(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    # easy way to do that
+    new_user = models.User(
+        **user.dict())
+    # add that new post into database
+    db.add(new_user)
+    # push this post into database
+    db.commit()
+    # and display that crated post
+    db.refresh(new_user)
+    return new_user
+
+
 if __name__ == "__main__":
     uvicorn.run('main:app', host="127.0.0.1", port=9002, reload=True)
