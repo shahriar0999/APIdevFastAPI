@@ -2,15 +2,11 @@ import time
 import uvicorn
 from fastapi import FastAPI, status, HTTPException, Response, Depends
 from typing import List
-from passlib.context import CryptContext
-import psycopg2
-from psycopg2.extras import RealDictCursor
 from sqlalchemy.orm import Session
-import models, schemas
+import models, schemas, utils
 from database import engine, get_db
 
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 models.Base.metadata.create_all(bind=engine)
 
 
@@ -133,10 +129,10 @@ def update_post(id: int, updated_post: schemas.PostCreate, db: Session = Depends
 
 
 @app.post("/users", status_code=status.HTTP_201_CREATED, response_model=schemas.UserOut)
-def createUser(user: schemas.UserCreate, db: Session = Depends(get_db)):
+def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
 
     # Hash the password -> user.password
-    hashed_password = pwd_context.hash(user.password)
+    hashed_password = utils.hash(user.password)
     user.password = hashed_password
     # easy way to do that
     new_user = models.User(
@@ -148,6 +144,14 @@ def createUser(user: schemas.UserCreate, db: Session = Depends(get_db)):
     # and display that crated post
     db.refresh(new_user)
     return new_user
+
+@app.get("/users/{id}", response_model=schemas.UserOut)
+def get_user(id: int, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.id == id).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail=f"User with id {id} not found")
+    return user
 
 
 if __name__ == "__main__":
