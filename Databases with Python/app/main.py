@@ -2,12 +2,15 @@ import time
 import uvicorn
 from fastapi import FastAPI, status, HTTPException, Response, Depends
 from typing import List
+from passlib.context import CryptContext
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from sqlalchemy.orm import Session
 import models, schemas
 from database import engine, get_db
 
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 models.Base.metadata.create_all(bind=engine)
 
 
@@ -130,7 +133,11 @@ def update_post(id: int, updated_post: schemas.PostCreate, db: Session = Depends
 
 
 @app.post("/users", status_code=status.HTTP_201_CREATED, response_model=schemas.UserOut)
-def createPost(user: schemas.UserCreate, db: Session = Depends(get_db)):
+def createUser(user: schemas.UserCreate, db: Session = Depends(get_db)):
+
+    # Hash the password -> user.password
+    hashed_password = pwd_context.hash(user.password)
+    user.password = hashed_password
     # easy way to do that
     new_user = models.User(
         **user.dict())
