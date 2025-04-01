@@ -1,9 +1,9 @@
-import time
 import uvicorn
-from fastapi import FastAPI, status, HTTPException, Response, Depends
-from routers import post, user
-import models, schemas, utils
-from database import engine, get_db
+from fastapi import FastAPI
+import routers.post as post
+import routers.user as user
+import models
+from database import engine
 
 
 models.Base.metadata.create_all(bind=engine)
