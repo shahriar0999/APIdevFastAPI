@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, status, Body
+from fastapi import FastAPI, HTTPException, status, Body, Response
 from pydantic import BaseModel
 
 
@@ -18,6 +18,12 @@ def find_chat(id: int):
     for chat in chats:
         if chat['id'] == id:
             return chat
+        
+# find index
+def find_chat_index(id: int):
+    for i, chat in enumerate(chats):
+        if chat['id'] == id:
+            return i
 
 @app.get("/")
 def root():
@@ -50,3 +56,11 @@ def create_chat(chat: Chat):
     return {"chat": chat}
 
 
+# delete a chat
+@app.delete("/chats/{id}")
+def delete_chat(id: int):
+    index = find_chat_index(id)
+    if index == None:
+        raise HTTPException(status_code=404, detail=f"Chat with id {id} not found")
+    chats.pop(index)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
