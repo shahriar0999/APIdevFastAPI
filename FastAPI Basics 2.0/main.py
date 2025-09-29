@@ -64,3 +64,15 @@ def delete_chat(id: int):
         raise HTTPException(status_code=404, detail=f"Chat with id {id} not found")
     chats.pop(index)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+# update a chat
+@app.put("/chats/{id}")
+def update_chat(id: int, chat: Chat):
+    index = find_chat_index(id)
+    if index == None:
+        raise HTTPException(status_code=404, detail=f"Chat with id {id} not found")
+    chat_dict = chat.dict()
+    chat_dict['id'] = id
+    chats[index] = chat_dict
+    return {'chat': chat_dict}
