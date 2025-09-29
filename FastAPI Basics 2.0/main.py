@@ -1,7 +1,12 @@
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status, Body
+from pydantic import BaseModel
 
 
 app = FastAPI()
+
+class Chat(BaseModel):
+    name: str
+    description: str
 
 chats = [
     {"id": 1, "name": "Advance MLOPS Roadmap", "description": "This is a chat about MLOPS"},
@@ -31,3 +36,17 @@ def get_chat(id: int):
     if not chat:
         raise HTTPException(status_code=404, detail=f"Chat with id {id} not found")
     return {'chat': chat}
+
+# # create a chat but have data validation problem
+# @app.post("/chats")
+# def create_chat(chat: dict = Body(...)):
+#     return {"message": "this works"}
+
+@app.post("/chats")
+def create_chat(chat: Chat):
+    chat = chat.dict()
+    chat['id'] = len(chats) + 1
+    chats.append(chat)
+    return {"chat": chat}
+
+
