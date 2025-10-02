@@ -31,3 +31,10 @@ while True:
 @app.get("/")
 def root():
     return {"message": "Hello World!"}
+
+
+@app.get("/chats")
+def get_posts():
+    cursor.execute("""SELECT * FROM chats """)
+    chats = cursor.fetchall()
+    return {"chats": chats}
