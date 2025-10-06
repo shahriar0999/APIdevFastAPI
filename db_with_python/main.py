@@ -5,7 +5,14 @@ from pydantic import BaseModel
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from datetime import datetime
+from langchain_groq import ChatGroq
+from langchain.schema import HumanMessage
+from dotenv import load_dotenv
 import time
+
+# Load API key from .env
+load_dotenv()
+groq_api_key = os.getenv("GROQ_API_KEY")
 
 
 app = FastAPI()
