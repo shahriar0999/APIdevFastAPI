@@ -1,3 +1,4 @@
+import os
 import time
 import uvicorn
 from fastapi import FastAPI, status, HTTPException, Response
@@ -14,13 +15,17 @@ import time
 load_dotenv()
 groq_api_key = os.getenv("GROQ_API_KEY")
 
+# Initialize Groq chat model
+chat = ChatGroq(
+    api_key=groq_api_key,
+    model="openai/gpt-oss-20b"  # or any available Groq model
+)
+
 
 app = FastAPI()
 
 class Post(BaseModel):
-    id: int
     title: str
-    date: datetime
     query: str
 
 while True:
@@ -45,3 +50,20 @@ def get_posts():
     cursor.execute("""SELECT * FROM chats """)
     chats = cursor.fetchall()
     return {"chats": chats}
+
+
+@app.post("/chats", status_code=status.HTTP_201_CREATED)
+def create_chat(post: Post):
+    cursor.execute("""INSERT INTO chats (title, query) VALUES (%s, %s)""",
+                   (post.title, post.query))
+    conn.commit()
+    # Send a message
+    messages = [
+        HumanMessage(content=post.query)
+    ]
+    response = chat(messages)
+    return {"response": response.content}
+  
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
