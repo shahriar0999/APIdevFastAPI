@@ -68,7 +68,15 @@ def create_chat(post: Post):
     new_post['response'] = response.content
     return {"response": new_post}
 
-
+# get a specific post
+@app.get("/chats/{id}")
+def get_post(id: int):
+    cursor.execute("""SELECT * FROM chats WHERE id = %s""", (id,))
+    post = cursor.fetchone()
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"post with id: {id} was not found")
+    return ("chat", post)
   
 
 if __name__ == "__main__":
