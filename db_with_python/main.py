@@ -90,7 +90,18 @@ def delete_post(id: int):
                             detail=f"chat with id: {id} does not exist")
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
-  
+# update a existing chat
+@app.put("/chats/{id}", status_code=status.HTTP_202_ACCEPTED)
+def update_chat(id: int, post: Post):
+    cursor.execute("""UPDATE chats SET title = %s, query = %s WHERE id = %s RETURNING *""",
+                   (post.title, post.query, id))
+    updated_post = cursor.fetchone()
+    conn.commit()
+
+    if updated_post == None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"chat with id: {id} does not exist")
+    return {"chat": updated_post}
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
