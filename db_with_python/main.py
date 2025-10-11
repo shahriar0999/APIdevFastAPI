@@ -68,7 +68,7 @@ def create_chat(post: Post):
     new_post['response'] = response.content
     return {"response": new_post}
 
-# get a specific post
+# get a specific chat
 @app.get("/chats/{id}")
 def get_post(id: int):
     cursor.execute("""SELECT * FROM chats WHERE id = %s""", (id,))
