@@ -54,15 +54,21 @@ def get_posts():
 
 @app.post("/chats", status_code=status.HTTP_201_CREATED)
 def create_chat(post: Post):
-    cursor.execute("""INSERT INTO chats (title, query) VALUES (%s, %s)""",
+    cursor.execute("""INSERT INTO chats (title, query) VALUES (%s, %s) RETURNING *""",
                    (post.title, post.query))
+    new_post = cursor.fetchone()
     conn.commit()
     # Send a message
     messages = [
         HumanMessage(content=post.query)
     ]
     response = chat(messages)
-    return {"response": response.content}
+    # conver that post into dict
+    new_post = dict(new_post)
+    new_post['response'] = response.content
+    return {"response": new_post}
+
+
   
 
 if __name__ == "__main__":
