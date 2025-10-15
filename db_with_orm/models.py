@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, Boolean
 from sqlalchemy.sql.expression import text
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 
-from .database import Base
+from database import Base
 
 class Chat(Base):
     __tablename__ = "chats_orm"
