@@ -37,12 +37,6 @@ class Post(BaseModel):
 def root():
     return {"message": "Hello World!"}
 
-# for testing
-@app.get("/test")
-def test_posts(db: Session = Depends(get_db)):
-    chats = db.query(models.Chat).all()
-    return {"data": chats}
-
 
 @app.get("/chats")
 def get_posts(db: Session = Depends(get_db)):
@@ -71,9 +65,6 @@ def get_post(id: int, db: Session = Depends(get_db)):
 # delete a specific chat
 @app.delete("/chats/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id: int, db: Session = Depends(get_db)):
-    # cursor.execute("""DELETE FROM chats WHERE id = %s RETURNING *""", (id,))
-    # deleted_post = cursor.fetchone()
-    # conn.commit()
     post = db.query(models.Chat).filter(models.Chat.id == id)
     if post.first() == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -85,10 +76,6 @@ def delete_post(id: int, db: Session = Depends(get_db)):
 # update a existing chat
 @app.put("/chats/{id}", status_code=status.HTTP_202_ACCEPTED)
 def update_chat(id: int, updated_post: Post, db: Session = Depends(get_db)):
-    # cursor.execute("""UPDATE chats SET title = %s, query = %s WHERE id = %s RETURNING *""",
-    #                (post.title, post.query, id))
-    # updated_post = cursor.fetchone()
-    # conn.commit()
     post_query = db.query(models.Chat).filter(models.Chat.id == id)
     post = post_query.first()
     if post == None:
