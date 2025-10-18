@@ -1,5 +1,5 @@
 import os
-import time
+from typing import List, Optional
 import uvicorn
 from fastapi import FastAPI, status, HTTPException, Response, Depends
 from pydantic import BaseModel
@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 from database import get_db, engine
 from sqlalchemy.orm import Session
 import time
-import models
+import models, schemas
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -38,29 +38,29 @@ def root():
     return {"message": "Hello World!"}
 
 
-@app.get("/chats")
+@app.get("/chats", response_model=List[schemas.PostBase])
 def get_posts(db: Session = Depends(get_db)):
     chats = db.query(models.Chat).all()
-    return {"chats": chats}
+    return chats
 
 
-@app.post("/chats", status_code=status.HTTP_201_CREATED)
-def create_chat(post: Post, db: Session = Depends(get_db)):
+@app.post("/chats", status_code=status.HTTP_201_CREATED, response_model=schemas.PostBase)
+def create_chat(post: schemas.PostCreate, db: Session = Depends(get_db)):
     new_chat = models.Chat(query=post.query, response=post.response)
     db.add(new_chat)
     db.commit()
     db.refresh(new_chat)
-    return {"response": new_chat}
+    return new_chat
 
 # get a specific chat
-@app.get("/chats/{id}")
+@app.get("/chats/{id}", response_model=schemas.PostBase)
 def get_post(id: int, db: Session = Depends(get_db)):
     post = db.query(models.Chat).filter(models.Chat.id == id).first()
 
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"post with id: {id} was not found")
-    return ("chat", post)
+    return post
 
 # delete a specific chat
 @app.delete("/chats/{id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -74,7 +74,7 @@ def delete_post(id: int, db: Session = Depends(get_db)):
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 # update a existing chat
-@app.put("/chats/{id}", status_code=status.HTTP_202_ACCEPTED)
+@app.put("/chats/{id}", status_code=status.HTTP_202_ACCEPTED, response_model=schemas.PostBase)
 def update_chat(id: int, updated_post: Post, db: Session = Depends(get_db)):
     post_query = db.query(models.Chat).filter(models.Chat.id == id)
     post = post_query.first()
@@ -83,7 +83,7 @@ def update_chat(id: int, updated_post: Post, db: Session = Depends(get_db)):
                             detail=f"chat with id: {id} does not exist")
     post_query.update(updated_post.dict(), synchronize_session=False)
     db.commit()
-    return {"chat": post_query.first()}
+    return post_query.first()
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
