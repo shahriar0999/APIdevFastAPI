@@ -3,16 +3,15 @@ from typing import List, Optional
 import uvicorn
 from fastapi import FastAPI, status, HTTPException, Response, Depends
 from pydantic import BaseModel
-import psycopg2
-from psycopg2.extras import RealDictCursor
 from datetime import datetime
 from langchain_groq import ChatGroq
 from langchain.schema import HumanMessage
 from dotenv import load_dotenv
 from database import get_db, engine
 from sqlalchemy.orm import Session
-import time
-import models, schemas
+import models, schemas, utils
+
+
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -84,6 +83,28 @@ def update_chat(id: int, updated_post: Post, db: Session = Depends(get_db)):
     post_query.update(updated_post.dict(), synchronize_session=False)
     db.commit()
     return post_query.first()
+
+# create users
+@app.post("/users", status_code=status.HTTP_201_CREATED, response_model=schemas.UserOut)
+def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+
+    # has the password - user.password
+    hashed_password = utils.hash(user.password)
+    user.password = hashed_password
+    new_user = models.User(**user.dict())
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
+
+# get user
+@app.get("/users/{id}", status_code=status.HTTP_200_OK, response_model=schemas.UserOut)
+def get_user(id: int, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.id == id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"user with id: {id} was not found")
+    return user
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
