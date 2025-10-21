@@ -1,8 +1,8 @@
 from fastapi import FastAPI, status, HTTPException, Response, Depends, APIRouter
 from typing import List
-from db_with_orm.database import get_db, engine
+import database
 from sqlalchemy.orm import Session
-from db_with_orm import models, schemas
+import models, schemas
 
 
 router = APIRouter(
@@ -12,13 +12,13 @@ router = APIRouter(
 
 
 @router.get("/", response_model=List[schemas.PostBase])
-def get_posts(db: Session = Depends(get_db)):
+def get_posts(db: Session = Depends(database.get_db)):
     chats = db.query(models.Chat).all()
     return chats
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.PostBase)
-def create_chat(post: schemas.PostCreate, db: Session = Depends(get_db)):
+def create_chat(post: schemas.PostCreate, db: Session = Depends(database.get_db)):
     new_chat = models.Chat(query=post.query, response=post.response)
     db.add(new_chat)
     db.commit()
@@ -27,7 +27,7 @@ def create_chat(post: schemas.PostCreate, db: Session = Depends(get_db)):
 
 # get a specific chat
 @router.get("/{id}", response_model=schemas.PostBase)
-def get_post(id: int, db: Session = Depends(get_db)):
+def get_post(id: int, db: Session = Depends(database.get_db)):
     post = db.query(models.Chat).filter(models.Chat.id == id).first()
 
     if not post:
@@ -37,7 +37,7 @@ def get_post(id: int, db: Session = Depends(get_db)):
 
 # delete a specific chat
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(id: int, db: Session = Depends(get_db)):
+def delete_post(id: int, db: Session = Depends(database.get_db)):
     post = db.query(models.Chat).filter(models.Chat.id == id)
     if post.first() == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -48,7 +48,7 @@ def delete_post(id: int, db: Session = Depends(get_db)):
 
 # update a existing chat
 @router.put("/{id}", status_code=status.HTTP_202_ACCEPTED, response_model=schemas.PostBase)
-def update_chat(id: int, updated_post: schemas.PostCreate, db: Session = Depends(get_db)):
+def update_chat(id: int, updated_post: schemas.PostCreate, db: Session = Depends(database.get_db)):
     post_query = db.query(models.Chat).filter(models.Chat.id == id)
     post = post_query.first()
     if post == None:
