@@ -48,7 +48,7 @@ def delete_post(id: int, db: Session = Depends(get_db)):
 
 # update a existing chat
 @router.put("/{id}", status_code=status.HTTP_202_ACCEPTED, response_model=schemas.PostBase)
-def update_chat(id: int, updated_post: Post, db: Session = Depends(get_db)):
+def update_chat(id: int, updated_post: schemas.PostCreate, db: Session = Depends(get_db)):
     post_query = db.query(models.Chat).filter(models.Chat.id == id)
     post = post_query.first()
     if post == None:
