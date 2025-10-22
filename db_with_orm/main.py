@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from database import get_db, engine
 from sqlalchemy.orm import Session
 import models, schemas, utils
-from routers import chats, users
+from routers import chats, users, auth
 
 
 
@@ -28,6 +28,7 @@ app = FastAPI()
 
 app.include_router(chats.router)
 app.include_router(users.router)
+app.include_router(auth.router)
 
 
 @app.get("/")
