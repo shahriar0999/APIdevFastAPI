@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.sql.expression import text
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 
@@ -11,6 +11,7 @@ class Chat(Base):
     query = Column(String, nullable=False)
     response = Column(String, nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text(("now()")))
+    owner_id = Column(Integer, ForeignKey("users_orm.id", ondelete="CASCADE"), nullable=False)
 
 class User(Base):
     __tablename__ = "users_orm"
