@@ -1,5 +1,5 @@
 from fastapi import FastAPI, status, HTTPException, Response, Depends, APIRouter
-from typing import List
+from typing import List, Optional
 import database
 from sqlalchemy.orm import Session
 import models, schemas, oauth2
@@ -10,10 +10,12 @@ router = APIRouter(
     tags=["Chats"]
 )
 
+#chats?limit=5&skip=1&search=general%knowledge%of%AI
 
 @router.get("/", response_model=List[schemas.Post])
-def get_posts(db: Session = Depends(database.get_db), current_user : int = Depends(oauth2.get_current_user)):
-    chats = db.query(models.Chat).filter(models.Chat.owner_id == current_user.id).all()
+def get_posts(db: Session = Depends(database.get_db), current_user : int = Depends(oauth2.get_current_user), limit: int = 10, skip: int = 0, search: Optional[str] = ""):
+    # chats = db.query(models.Chat).filter(models.Chat.owner_id == current_user.id).limit(limit).offset(skip).all()
+    chats = db.query(models.Chat).filter(models.Chat.owner_id == current_user.id).filter(models.Chat.query.contains(search)).limit(limit).offset(skip).all()
     return chats
 
 
